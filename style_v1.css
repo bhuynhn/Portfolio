@@ -24,11 +24,49 @@ body{
     background: 000814;
 }
 
-header img{
-    max-width: 100px;
+main img{
+    max-width: 110px;
     text-align: center;
     border-radius: 150px;    
     border: 2mm ridge #ffd60a;
+}
+
+header img{
+    -webkit-transition: width 0s, height 0s;
+    transition: width 0s, height 0s;
+}
+
+header{
+    height: 50px;
+}
+
+header img{
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: 7px;
+    padding-right: 7px;
+    width: 25px;
+    height: 25px;
+}
+
+header img:hover{
+    width: 30px;
+    height: 30px;
+}
+
+header img.social{
+    float: right;
+    border: none;
+}
+
+header img.social-gh{
+    float: right;
+    border: none;
+}
+
+header img.social-linkedin{
+    float: right;
+    border: none;
 }
 
 header p{
@@ -42,10 +80,6 @@ p{
 
 p span{
     display: block;
-}
-
-header{
-    padding-top:5%;
 }
 
 mark.yellow{
