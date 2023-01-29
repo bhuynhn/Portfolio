@@ -4,6 +4,9 @@
 /* ffc300 */
 /* ffd60a */
 
+html{
+    height: 100%;
+}
 
 body{
     text-align: center;
@@ -21,29 +24,34 @@ body{
     background: 000814;
 }
 
-html{
-    height: 100%;
-}
-
-header{
-    padding-top:5%;
+header img{
+    max-width: 100px;
+    text-align: center;
+    border-radius: 150px;    
+    border: 5px solid #003566;
 }
 
 header p{
     color: #e0e1dd;
 }
 
+p{
+    background-color: #000814;
+    color: #e0e1dd;
+}
+
+p span{
+    display: block;
+}
+
+header{
+    padding-top:5%;
+}
+
 mark.yellow{
     color:#ffc300;
     background: none;
     font-weight: bold;
-}
-
-header img{
-    max-width: 100px;
-    text-align: center;
-    border-radius: 150px;    
-    border: 5px solid #003566;
 }
 
 ul{
@@ -55,15 +63,6 @@ ul{
 li{
     text-align: left;
     font-style: italic;
-}
-
-p{
-    background-color: #000814;
-    color: #e0e1dd;
-}
-
-p span{
-    display: block;
 }
 
 a{
