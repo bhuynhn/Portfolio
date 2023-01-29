@@ -50,8 +50,8 @@ header img{
 }
 
 header img:hover{
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
 }
 
 header img.social{
@@ -97,6 +97,14 @@ ul{
 li{
     text-align: left;
     font-style: italic;
+    font-size: large;
+}
+
+.descriptions{
+    margin-top: 0px;
+    padding-top: 0px;
+    font-size: small;
+    text-align: left;
 }
 
 a{
@@ -105,6 +113,23 @@ a{
     margin: 0 -.25rem;
     padding: 0 .25rem;
     transition: color .3s ease-in-out, box-shadow .3s ease-in-out;
+}
+
+.underlink{
+    text-decoration: none;
+}
+
+.underlink:hover{
+    color: #ffd60a;
+}
+
+.details{
+    text-decoration: none;
+}
+
+.details:hover{
+    box-shadow: inset 400px 0 0 0 #ffc300;
+    color: #000814;
 }
 
 li a:hover{
