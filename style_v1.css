@@ -32,8 +32,8 @@ main img{
 }
 
 header img{
-    -webkit-transition: width 0s, height 0s;
-    transition: width 0s, height 0s;
+    -webkit-transition: width 1s, height 1s;
+    transition: width 1s, height 1s;
 }
 
 header{
@@ -98,6 +98,7 @@ li{
     text-align: left;
     font-style: italic;
     font-size: large;
+    font-weight: bold;
 }
 
 .descriptions{
@@ -120,11 +121,17 @@ a{
 }
 
 .underlink:hover{
-    color: #ffd60a;
+    color: #ffc300;
 }
 
 .details{
     text-decoration: none;
+}
+
+.details{
+    color: #ffc300;
+    font-size: xx-small;
+    vertical-align: super;
 }
 
 .details:hover{
