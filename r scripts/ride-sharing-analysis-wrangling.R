@@ -1,7 +1,5 @@
 #install required packages
 library(tidyverse)
-library(lubridate)
-library(ggplot2)
 
 #function to select and rename variables
 clean_df <- function(x){
@@ -37,13 +35,36 @@ dec_22 <- clean_df(read_csv("Source-data/GOOG_DA_P1/202212-divvy-tripdata.csv"))
 all_trip <- bind_rows(jan_22, feb_22, mar_22, apr_22, may_22, jun_22, jul_22, aug_22, sep_22, nov_22, oct_22, dec_22) %>%
   select(-c(start_lat, start_lng, end_lat, end_lng))
 
-#calculate ride length in minutes
-all_trip$ride_length <- difftime(all_trip$end_time,all_trip$start_time) / 60
+#add columns that list the date, month, day and year of each ride
+#This will allow us to aggregate ride data for each month, day, or year
+all_trip$date <- as.Date(all_trip$start_time)
+all_trip$month <- format(as.Date(all_trip$date), "%m")
+all_trip$day <- format(as.Date(all_trip$date), "%d")
+all_trip$year <- format(as.Date(all_trip$date), "%Y")
+all_trip$day_of_week <- format(as.Date(all_trip$date), "%A")
 
-#bad data return negative length time, 100 observation identified, output to csv
-bad <- all_trip %>%
-  filter(all_trip$ride_length < 0) %>%
-  write.csv(file = "Source-data/GOOG_DA_P1/2022_bad_tripdata.csv")
+#calculate ride length in hours
+all_trip$ride_length <- difftime(all_trip$end_time,all_trip$start_time, units = "hours")
+
+#bad data return negative length time, 100 observation identified, reverse sign
+index <- all_trip$ride_length < 0
+sum(index)
+
+all_trip$ride_length <- ifelse(all_trip$ride_length > 0,
+                               all_trip$ride_length,
+                               all_trip$ride_length* -1)
+
+#descriptive analysis on ride_length
+mean(all_trip$ride_length) 
+median(all_trip$ride_length)
+max(all_trip$ride_length)
+min(all_trip$ride_length)
+
+#output clean csv for further analysis
+all_trip %>% write.csv(file = "Source-data/GOOG_DA_P1/2022_consolidated_clean_tripdata.csv")
+
+
+
 
 
 
