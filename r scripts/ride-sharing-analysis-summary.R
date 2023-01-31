@@ -1,4 +1,5 @@
 #install required packages
+library(tidyverse)
 
 #load dataset
 all_trip <- read_csv("Source-data/GOOG_DA_P1/2022_consolidated_clean_tripdata.csv")

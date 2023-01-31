@@ -8,25 +8,26 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+all_trip <- read_csv("Source-data/GOOG_DA_P1/2022_consolidated_clean_tripdata.csv")
 ```
 
-**Business task:** Cyclistic, a bike-sharing company like to increase the company’s profit by converting casual riders into annual members. Lily M., the marketing director, wants to create a marketing campaign to target the casual rider group. But rather than targeting the entire population, she’d like to understand the behavior of casual riders by analyzing and identifying the trends of the company’s historical bike trip data. 
+**Business task:** Cyclistic, a bike-sharing company like to increase the company's profit by converting casual riders into annual members. Lily M., the marketing director, wants to create a marketing campaign to target the casual rider group. But rather than targeting the entire population, she'd like to understand the behavior of casual riders by analyzing and identifying the trends of the company's historical bike trip data.
 
 The first question that needs to be answered through analysis is, *how do annual members and casual riders use bikes differently?*
 
-**Data sources:** 12 months of historical bike trip data, that is publicly hosted under the following license ([Data License Agreement | Divvy Bikes](https://ride.divvybikes.com/data-license-agreement)). The source contains 12 CVS files which each file contains data for each month, starting from Jan 2022 to Dec 2022
+**Data sources:** 12 months of historical bike trip data, that is publicly hosted under the following license ([Data License Agreement \| Divvy Bikes](https://ride.divvybikes.com/data-license-agreement)). The source contains 12 CVS files which each file contains data for each month, starting from Jan 2022 to Dec 2022
 
-**Data analysis:** The analysis includes 2 phases. In phase 1, the spreadsheet is used to make initial observations, error checking, and integrity checking. In phase 2, Rstudio and R are used for data wrangling and visualization. The two processes are documented below.   ****
+**Data analysis:** The analysis includes 2 phases. In phase 1, the spreadsheet is used to make initial observations, error checking, and integrity checking. In phase 2, Rstudio and R are used for data wrangling and visualization. The two processes are documented below. \*\*\*\*
 
 Spreadsheet process:
 
 Run a few calculations in one file to get a better sense of data layout. The following measures are calculated:
 
-- Mean of ride_lenght -to calculate the average ride length
-- Max of ride_lenght -to calculate the maximum ride
-- Pivot table of average ride_length -to calculate average ride break out by casual and member group
-- Pivot table of average ride_length - to calculate average ride break out by day_of_week
-- Pivot table of the count of rides  -to calculate the number of rides by day_of_week
+-   Mean of ride_lenght -to calculate the average ride length
+-   Max of ride_lenght -to calculate the maximum ride
+-   Pivot table of average ride_length -to calculate average ride break out by casual and member group
+-   Pivot table of average ride_length - to calculate average ride break out by day_of_week
+-   Pivot table of the count of rides -to calculate the number of rides by day_of_week
 
 The same analysis is being performed on several files to ensure data consistency among datasets
 
@@ -34,61 +35,53 @@ Rstudio/R process:
 
 The process is performed with the following steps
 
-- Import data
-- Make columns consistent and merge them into a single data frame
-- Clean up, adjust bad data points and add calculated variables to prepare for analysis.
-    
+-   Import data
+
+-   Make columns consistent and merge them into a single data frame
+
+-   Clean up, adjust bad data points and add calculated variables to prepare for analysis.
+
     Upon investigation, some observations have variables switched places which returns a negative value of ride length. The observations have their signs flipped as a result
-    
-    The above process can be reviewed in the *‘ride-sharing-analysis-wrangling.R’* script
-    
-- Conduct descriptive analysis
-    
-    The above process can be reviewed in the *‘ride-sharing-analysis-summary.R’* script
-    
-- Visualize data for supporting findings
-    
-    The above process can be reviewed in the *‘ride-sharing-analysis-viz.R’* script
-    
+
+    The above process can be reviewed in the *'ride-sharing-analysis-wrangling.R'* script
+
+-   Conduct descriptive analysis
+
+    The above process can be reviewed in the *'ride-sharing-analysis-summary.R'* script
+
+-   Visualize data for supporting findings
+
+    The above process can be reviewed in the *'ride-sharing-analysis-viz.R'* script
+
 **Analysis Summary**
 
 ```{r, echo=FALSE, include=FALSE}
-all_trip <- read_csv("Source-data/GOOG_DA_P1/2022_consolidated_clean_tripdata.csv")
 count_trip <- all_trip %>% count(usertype) %>% rename("User type"=usertype, "Total trip" = n)
+bike_type_usage <- all_trip %>% group_by(usertype, bikeid) %>% summarize(mean = mean(ride_length))
+max_usage_by_user <- all_trip %>% group_by(usertype) %>% summarize("Max usage" = max(ride_length)) %>% rename("User type"=usertype)
 ```
 
-It is expected as member riders make more trip than casual riders. We can see member riders make more trip than casual riders in 2022, and it is expected as membership is more profitable
+It is expected as member riders make more trip than casual riders (1.44:1 ratio)
 
 ```{r, echo=FALSE}
 knitr::kable(count_trip, caption = "Total trip by User type")
 ```
 
-However; it is surprising to see that casual riders are using the the service much longer than members. This could result from a large numbers of casual riders purchase daypass for multiple days. Plot below shows casual riders rent bike up to 690 hours.
-
-```{r, echo=FALSE, include=FALSE}
-
-```
+However; it is surprising to see that casual riders are using the bikes longer than members. This could result from a large numbers of casual riders purchase daypass for multiple days. Plot below shows casual riders rent bike up to 690 hours.
 
 ```{r, echo=FALSE}
-
+knitr::kable(max_usage_by_user, caption = "Max usage by User type")
+ggplot(all_trip, aes(x=day_of_week, y=ride_length))+geom_boxplot(range=0)+facet_grid(rows=vars(usertype))
 ```
 
-This also create a problem for our analysis, as this only happen in a few observation comparing the sire of the dataset, and as a result the mean measure is skewed. This suggest that we use median to measure the ride length instead. 
-
-```{r, echo=FALSE, include=FALSE}
-
-```
+The most popular bike type for casual rider is electric bike, this group also utilize docked bike while none of our member use docked bike at all.
 
 ```{r, echo=FALSE}
-
+ggplot(data=all_trip)+geom_bar(aes(bikeid))+facet_grid(~usertype)+theme(axis.text.x=element_text(angle=45))+labs(subtitle = "Count of Bike Type by User group")
 ```
 
-
-
-```{r, echo=FALSE, include=FALSE}
-
-```
+On average, docked bike is used the longest, up to 2 hours
 
 ```{r, echo=FALSE}
-
+knitr::kable(bike_type_usage, caption = "Average usage by User and Bike type")
 ```
