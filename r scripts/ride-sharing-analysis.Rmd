@@ -1,0 +1,221 @@
+---
+title: "A Bike-Sharing Case Study"
+author: "Bao Huynh"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(scales)
+library(lubridate)
+```
+
+**Business task:** Cyclistic, a bike-sharing company like to increase the company's profit by converting casual riders into annual members. Lily M., the marketing director, wants to create a marketing campaign to target the casual rider group. But rather than targeting the entire population, she'd like to understand the behavior of casual riders by analyzing and identifying the trends of the company's historical bike trip data.
+
+The first question that needs to be answered through analysis is, *how do annual members and casual riders use bikes differently?*
+
+
+**Data sources:** 12 months of historical bike trip data, that is publicly hosted under the following license ([Data License Agreement \| Divvy Bikes](https://ride.divvybikes.com/data-license-agreement)). The source contains 12 CVS files which each file contains data for each month, starting from Jan 2022 to Dec 2022
+
+A few limitation is noted within this dataset are:
+
+-No trips purpose
+
+-No gender breakout
+
+-No weather condition
+
+-No age breakout
+
+
+**Analysis Summary** Rstudio and R are used for data wrangling and visualization. The process are documented below. 
+
+Loading the 12 month dataset
+```{r message=FALSE}
+#load data
+jan_22 <- read_csv("Source-data/GOOG_DA_P1/202201-divvy-tripdata.csv")
+feb_22 <- read_csv("Source-data/GOOG_DA_P1/202202-divvy-tripdata.csv")
+mar_22 <- read_csv("Source-data/GOOG_DA_P1/202203-divvy-tripdata.csv")
+apr_22 <- read_csv("Source-data/GOOG_DA_P1/202204-divvy-tripdata.csv")
+may_22 <- read_csv("Source-data/GOOG_DA_P1/202205-divvy-tripdata.csv")
+jun_22 <- read_csv("Source-data/GOOG_DA_P1/202206-divvy-tripdata.csv")
+jul_22 <- read_csv("Source-data/GOOG_DA_P1/202207-divvy-tripdata.csv")
+aug_22 <- read_csv("Source-data/GOOG_DA_P1/202208-divvy-tripdata.csv")
+sep_22 <- read_csv("Source-data/GOOG_DA_P1/202209-divvy-publictripdata.csv")
+nov_22 <- read_csv("Source-data/GOOG_DA_P1/202210-divvy-tripdata.csv")
+oct_22 <- read_csv("Source-data/GOOG_DA_P1/202211-divvy-tripdata.csv")
+dec_22 <- read_csv("Source-data/GOOG_DA_P1/202212-divvy-tripdata.csv")
+
+#stack individual month data frames into one
+all_trips <- bind_rows(jan_22, feb_22, mar_22, apr_22, may_22, jun_22, jul_22, aug_22, sep_22, nov_22, oct_22, dec_22) %>% select(-c(start_lat, start_lng, end_lat, end_lng))
+```
+
+Inspect new dataset structure with str() function
+```{r eval=FALSE}
+head(all_trips)
+```
+
+Select and format variable for analysis
+```{r}
+all_trips <- all_trips %>% 
+  mutate(bike_type = rideable_type,
+         started_at = as.POSIXct(started_at),
+         ended_at = as.POSIXct(ended_at),
+         start_station = start_station_name,
+         end_station = end_station_name,
+         user_type = member_casual,
+         ride_length = difftime(ended_at, started_at)) 
+```
+
+Since we are comparing member and casual group, let's take a look at how many ride these group make each day of the week
+
+```{r echo=FALSE}
+#comparison of trip by days of week
+member_casual_col <- all_trips %>%
+  select(member_casual, started_at) %>%
+  drop_na(started_at, member_casual) %>%
+  mutate(weekday = wday(started_at)) %>%
+  group_by(weekday, member_casual) %>%
+  summarise(counts = n(),
+            .groups = "drop") %>%
+  ungroup() %>%
+  arrange(desc(counts)) %>%
+  ggplot() +
+  geom_line(aes(weekday, counts, color = member_casual),
+            linewidth = 2) +
+  scale_x_continuous(breaks = c(1,2,3,4,5,6,7),
+                     labels = c("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")) +
+  scale_color_manual(
+    name = NULL,
+    values = c("casual" = "#ffc300", "member" = "#003566"),
+    labels = c("Casual", "Member")
+  ) +
+  theme(legend.position = "bottom") +
+  labs(title = "Rides by day of week and type of customers",
+       x = NULL,
+       y = NULL)
+member_casual_col
+```
+
+This graphs show us a couple thing:
+
+ 1. Members make way more trips than casual rider, especially during business days which is explainable as people work during these days
+ 
+ 2. On the opposite, casual make as many trips as member in the weekends and the number plummeting during the weekday
+ 
+Let's take a closer look at the hours level and see how these two group behave
+
+
+```{r warning=FALSE, echo=FALSE}
+#comparison of trip count by weekday and weekend
+x <- all_trips %>%
+  select(member_casual, started_at) %>%
+  drop_na(started_at, member_casual) %>%
+  mutate(
+    weekday = wday(started_at, label = TRUE),
+    weekday_weekend = if_else(weekday %in% c("Sat", "Sun"), "Weekend", "Weekday"),
+    started_at_hour = hour(started_at)
+  )  %>%
+  count(started_at_hour, member_casual, weekday_weekend, name = "counts") %>%
+  ggplot(aes(started_at_hour, y = counts, color = member_casual)) +
+  geom_line(size = 1.3) +
+  facet_wrap(vars(weekday_weekend), ncol = 1) +
+  scale_color_manual(values = c("casual" = "#ffc300", "member" = "#003566"),
+                     labels = c("Casual", "Member")) +
+  theme(axis.text.x = element_text(angle = 90)) +
+  theme(strip.background = element_rect(fill = "#001d3d")) +
+  theme(strip.text = element_text(
+    colour = 'white',
+    size = 11,
+    face = "bold"
+  )) +
+  labs(
+    title = "Weekday VS Weekend Trips By Time Of Day",
+    x = "Time",
+    y = "Counts",
+    color = ""
+  )
+x
+```
+
+We can see that the number of trips peak round 7AM and 5PM during weekday, the time where people start commute to and from work. During the weekend, it flats out evenly from 10AM to 8 PM. Now that we know the distribution of trip our group make. Let's take a look at the distribution of their choice of ride
+
+```{r echo=FALSE}
+all_trips %>%
+  count(week = floor_date(started_at, "week"),
+        rideable_type,
+        name = "counts") %>%
+  ggplot() +
+  geom_line(aes(x = week, y = counts, color = rideable_type), size = 1) +
+  theme_minimal() +
+  facet_wrap(vars(rideable_type)) +
+  scale_color_manual(
+    values = c(
+      "classic_bike" = "#7c0d0e",
+      "docked_bike" = "#26453e",
+      "electric_bike" = "#ffa500"
+    )
+  ) +
+  theme(strip.text = element_blank(), axis.text.x = element_text(angle = 90))+
+  labs(title = "Weekly Rides distribution by Types of rideables",
+       x = "",
+       y = "Counts")
+```
+
+While it's identity distributions between electric and classic, docked bike is not very popular among our user. Or perhaps there isn't enough docked bike for people to use. We should consider further analysis into this. 
+
+Now that we know which bike our customer like, when they ride during the week. How about where? Let's take a look at top 10 stations where our riders start from and end at
+
+```{r echo=FALSE}
+#top 10 station where riders start from
+top_10_start_station <- all_trips %>%
+  mutate(start_station_name = fct_lump(start_station_name, 10)) %>% 
+  count(start_station_id, start_station_name, name = "counts", sort = T) %>% 
+  filter(!is.na(start_station_name),
+         !is.na(start_station_id),
+         start_station_name != "Other") %>%
+  mutate(start_station_name = fct_reorder(start_station_name, counts))
+
+#plot
+top_10_start_plt <- ggplot(top_10_start_station) +
+  geom_col(aes(start_station_name, counts, fill = start_station_name),
+           width = 0.8,
+           show.legend = FALSE) +
+  scale_fill_viridis_d(option = "E", direction = -1) +
+  coord_flip() +
+  labs(title = "Top 10 Start Station",
+       x = NULL,
+       y = NULL)
+
+#top 10 station where riders end from
+top_10_end_station <- all_trips %>%
+  mutate(end_station_name = fct_lump(end_station_name, 10)) %>% 
+  count(end_station_id, end_station_name, name = "counts", sort = T) %>% 
+  filter(!is.na(end_station_name),
+         !is.na(end_station_id),
+         end_station_name != "Other") %>%
+  mutate(end_station_name = fct_reorder(end_station_name, counts))
+
+#plot
+top_10_end_plt <- ggplot(top_10_end_station) +
+  geom_col(aes(end_station_name, counts, fill = end_station_name),
+           width = 0.8,
+           show.legend = FALSE) +
+  scale_fill_viridis_d(option = "E", direction = -1) +
+  coord_flip() +
+  labs(title = "Top 10 End Station",
+       x = NULL,
+       y = NULL)
+top_10_start_plt
+top_10_end_plt
+```
+
+**Recommendation:**
+
+-It's clear that not many casual rider will ride during week days, we could develop promo campaign to increase sale during these time frame, the promo should also target non-peaking hour during the day.
+
+-Docked bike is not popular among our user or perhaps we don't have enough docked bike for people to use. It's an idea to do further analysis to determine which is more approriate action.
+
+-We should target ads at station where it's most popular, the top 10 station where user start and end will be a good start for target location.
